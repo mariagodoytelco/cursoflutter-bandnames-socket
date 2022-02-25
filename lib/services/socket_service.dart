@@ -1,5 +1,8 @@
+// ignore_for_file: constant_identifier_names
+
 import 'package:flutter/material.dart';
 
+// ignore: library_prefixes
 import 'package:socket_io_client/socket_io_client.dart' as IO;
 import 'package:socket_io_client/socket_io_client.dart';
 
@@ -34,14 +37,14 @@ class SocketService with ChangeNotifier {
       notifyListeners();
     });
 
-    _socket.on('nuevo-mensaje', (payload) {
-      print('Nuevo mensaje: $payload');
+    // _socket.on('nuevo-mensaje', (payload) {
+    //   print('Nuevo mensaje: $payload');
 
-      //separados
-      print('nuevo mensaje: ');
-      print('nombre: ' + payload['nombre']);
-      print('mensaje: ' + payload['mensaje']);
-      print(payload.containsKey('mensaje2') ? payload['payload'] : 'no hay');
-    });
+    //   //separados
+    //   print('nuevo mensaje: ');
+    //   print('nombre: ' + payload['nombre']);
+    //   print('mensaje: ' + payload['mensaje']);
+    //   print(payload.containsKey('mensaje2') ? payload['payload'] : 'no hay');
+    // });
   }
 }

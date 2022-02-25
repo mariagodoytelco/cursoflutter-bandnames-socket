@@ -6,9 +6,11 @@ import 'package:band_names/pages/home.dart';
 import 'package:band_names/pages/status.dart';
 
 
-void main() => runApp(MyApp());
+void main() => runApp(const MyApp());
 
 class MyApp extends StatelessWidget {
+  const MyApp({Key? key}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return MultiProvider(
@@ -20,8 +22,8 @@ class MyApp extends StatelessWidget {
         title: 'Material App',
         initialRoute: 'home',
         routes: {
-          'home' : (_) => HomePage(),
-          'status' : (_) => StatusPage()
+          'home' : (_) => const HomePage(),
+          'status' : (_) => const StatusPage()
         },
       ),
     );
