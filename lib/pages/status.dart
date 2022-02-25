@@ -20,7 +20,7 @@ class StatusPage extends StatelessWidget {
           onPressed: () {
             //evento: emitir-mensaje
             //{nombre: 'Flutter', mensaje: 'Hola desde Flutter'}
-            socketService.socket.emit('emitir-mensaje', 
+            socketService.emit('emitir-mensaje', 
             {'nombre': 'Flutter', 
             'mensaje': 'Hola desde Flutter'});
           }),

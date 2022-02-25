@@ -1,5 +1,8 @@
 import 'package:band_names/models/band.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../services/socket_service.dart';
 
 class HomePage extends StatefulWidget {
   @override
@@ -7,27 +10,50 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Band> bands = [
-    Band(id: '1', name: 'BTS', votes: 5),
-    Band(id: '2', name: 'StrayKids', votes: 1),
-    Band(id: '3', name: 'Seventeen', votes: 2),
-    Band(id: '4', name: 'Got7', votes: 5),
-  ];
+  @override
+  void initState() {
+    SocketService socketService =
+      Provider.of<SocketService>(context, listen: false);
+    socketService.socket.on('active-bands', _handleActiveBands);
+    super.initState();
+  }
+
+  _handleActiveBands(dynamic payload){
+    bands = (payload as List).map((band) => Band.fromMap(band)).toList();
+    setState(() {});
+  }
+  
+  @override
+  void dispose() {
+    SocketService socketService =
+      Provider.of<SocketService>(context, listen: false);
+    socketService.socket.off('active-bands');
+    super.dispose();
+  }
+
+  List<Band> bands = [];
 
   @override
   Widget build(BuildContext context) {
+    SocketService socketService = Provider.of<SocketService>(context);
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'BandNames',
-          style: TextStyle(color: Colors.black87),
-        ),
+        title: const Text( 'BandNames', style: TextStyle(color: Colors.black87)),
         backgroundColor: Colors.white,
         elevation: 1,
+        actions: [
+          Container(
+            margin: const EdgeInsets.only(right: 10.0),
+            child: (socketService.serverStatus == ServerStatus.Online)
+              ? const Icon(Icons.check_circle, color: Colors.blue)
+              : const Icon(Icons.offline_bolt, color: Colors.red),
+          )
+        ],
       ),
       body: ListView.builder(
           itemCount: bands.length,
-          itemBuilder: (context, i) => _bandTitle(bands[i])),
+          itemBuilder: ( _ , i) => _bandTitle(bands[i])),
       floatingActionButton: FloatingActionButton(
         child: const Icon(Icons.add),
         elevation: 1,
@@ -37,19 +63,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _bandTitle(Band band) {
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    
     return Dismissible(
       key: Key(band.id),
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction) {
-        print('direction : $direction');
-        print('band id : ${band.id}');
-      },
+      onDismissed: ( _ ) => socketService.emit('delete-band', {'id' : band.id}),
       background: Container(
         color: Colors.red,
         padding: const EdgeInsets.only(left: 8.0),
         child: const Align(
-            alignment: Alignment.centerLeft,
-            child: Text('Delete Band', style: TextStyle(color: Colors.white))),
+          alignment: Alignment.centerLeft,
+          child: Text('Delete Band', style: TextStyle(color: Colors.white))),
       ),
       child: ListTile(
         leading: CircleAvatar(
@@ -57,10 +82,8 @@ class _HomePageState extends State<HomePage> {
           backgroundColor: Colors.blue[100],
         ),
         title: Text(band.name),
-        trailing: Text(
-          '${band.votes}',
-          style: const TextStyle(fontSize: 20.0),
-        ),
+        trailing: Text('${band.votes}', style: const TextStyle(fontSize: 20.0)),
+        onTap: () => socketService.socket.emit('vote-band', {'id' : band.id}),
       ),
     );
   }
@@ -69,32 +92,26 @@ class _HomePageState extends State<HomePage> {
     final textController = TextEditingController();
 
     showDialog(
-        context: context,
-        builder: (context) {
-          return AlertDialog(
-            title: const Text('New band name: '),
-            content: TextField(
-              controller: textController,
-            ),
-            actions: [
-              MaterialButton(
-                child: const Text('add'),
-                elevation: 5,
-                textColor: Colors.blue,
-                onPressed: () {
-                  addBandToList(textController.text);
-                },
-              )
-            ],
-          );
-        });
+      context: context,
+      builder: ( _ ) => AlertDialog(
+        title: const Text('New band name: '),
+        content: TextField(
+          controller: textController,
+        ),
+        actions: [
+          MaterialButton(
+            child: const Text('add'),
+            elevation: 5,
+            textColor: Colors.blue,
+            onPressed: () => addBandToList(textController.text),
+          )
+        ],
+      ));
   }
 
   addBandToList(String name) {
-    if (name.length > 1) {
-      bands.add(Band(id: '${bands.length + 1}', name: name, votes: 0));
-      setState(() {});
-    }
+    final socketService = Provider.of<SocketService>(context, listen: false);
+    if (name.length > 1) { socketService.socket.emit('add-band', {'name' : name});}
     Navigator.pop(context);
   }
 }
